@@ -56,5 +56,7 @@ app.use(function(err, req, res, next) {
     });
 });
 
+var ircService = require("./service/IrcService");
+ircService.connect();
 
 module.exports = app;
