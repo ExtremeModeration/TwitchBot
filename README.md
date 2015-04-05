@@ -1,4 +1,4 @@
 TwitchBot
 =========
 
-The ExMo Twitch bot
+The ExtremeModeration.tv Twitch bot
