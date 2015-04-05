@@ -1,0 +1,5 @@
+---
+applications:
+- name: bot.extrememoderation.tv
+  memory: 128M
+  instances: 1
