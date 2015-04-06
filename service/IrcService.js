@@ -43,7 +43,6 @@ function IrcService() {
     
     function sendNicks() {
         api.viewers.sendNicks(nicks, function(result){
-            console.log(result.body.message);
             setTimeout(sendNicks, config.sendDelay);
         });
     }
@@ -82,6 +81,14 @@ function IrcService() {
                         api.viewers.getViewerPoints(from, function(viewer){
                             bot.say(defaultChannel(), from + ', you currently have ' + viewer.points + ' points.  Go you!');
                         });
+                        break;
+                    case 'pointsforall':
+                    case 'makeitrain':
+                        if (from.toLowerCase() === 'extrememoderation') {
+                            api.viewers.sendNicks(nicks, function(result){
+                                bot.say(defaultChannel(), 'You get a point! And you get a point! Everyone gets a point!');
+                            });
+                        }
                         break;
                 }
             }
