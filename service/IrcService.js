@@ -69,17 +69,20 @@ function IrcService() {
             if (command.length > 2) {
                 switch(command) {
                     case 'highfive':
-                        from = targetUser(from, text);
-                        bot.say(defaultChannel(), 'Slip me some skin ' + from + '!');
-                        bot.say(defaultChannel(), '/me high fives ' + from + '!');
+                        var _from = targetUser(from, text);
+                        if (!_from || !isViewerHere(_from)) _from = from;
+                        
+                        bot.say(defaultChannel(), 'Slip me some skin ' + _from + '!');
+                        bot.say(defaultChannel(), '/me high fives ' + _from + '!');
                         break;
                     case 'time':
                         bot.say(defaultChannel(), 'ExtremeModeration\'s time is currently ' + local_time.format('h:mm A'));
                         break;
                     case 'points':
-                        from = targetUser(from, text);
-                        api.viewers.getViewerPoints(from, function(viewer){
-                            bot.say(defaultChannel(), from + ', you currently have ' + viewer.points + ' points.  Go you!');
+                        var _from = targetUser(from, text);
+                        if (!_from || !isViewerHere(_from)) _from = from;
+                        api.viewers.getViewerPoints(_from, function(viewer){
+                            bot.say(defaultChannel(), _from + ', you currently have ' + viewer.points + ' points.  Go you!');
                         });
                         break;
                     case 'pointsforall':
@@ -89,6 +92,29 @@ function IrcService() {
                                 bot.say(defaultChannel(), 'You get a point! And you get a point! Everyone gets a point!');
                             });
                         }
+                        break;
+                    case 'song':
+                    case 'nowplaying':
+                        break;
+                    case 'flipcoin':
+                        var side = Math.floor((Math.random() * 2) + 1);
+                        var coinSide = side === 1 ? 'heads' : 'tails';
+                        bot.say(defaultChannel(), '/me flips a coin; This time it lands ' + coinSide + ' up.');
+                        break;
+                    case 'fight':
+                        var opponent = targetUser(from, text);
+                        var self = !opponent || opponent.toLowerCase() === from.toLowerCase();
+                        var opponentIsHere = !self && opponent && isViewerHere(opponent);
+                        
+                        if (self) {
+                            bot.say(defaultChannel(), '/me watches as ' + from + ' fights with themselves. Who\'s going to win this time?');
+                        } else if (opponentIsHere) {
+                            var winner = Math.floor((Math.random() * 2) + 1) === 1 ? from : opponent;
+                            bot.say(defaultChannel(), '/me watches as ' + from + ' picks a fight with ' + opponent + '... This time ' + winner + ' comes out on top!');
+                        } else {
+                            bot.say(defaultChannel(), from + ', if you want to pick a fight, you should probably choose someone who\'s actually here!');
+                        }
+                        
                         break;
                 }
             }
@@ -118,8 +144,9 @@ function IrcService() {
     }
     
     function targetUser(from, text) {
+        text = text.trim();
         var spaceIndex = text.indexOf(' '),
-            nick = from;
+            nick;
         if (spaceIndex > 0) {
             var _message = text.substring(spaceIndex+1,text.length);
             spaceIndex = _message.indexOf(' ');
@@ -127,15 +154,14 @@ function IrcService() {
                 _message = _message.substr(0, spaceIndex).trim()
             }
             
-            for (var i=0; i < nicks.length; i++) {
-                if (nicks[i].toLowerCase() === _message.toLowerCase()) {
-                    nick = _message;
-                    break;
-                }
-            }
+            nick = _message;
         }
         
         return nick;
+    }
+    
+    function isViewerHere(nick) {
+        return _.includes(nicks, nick);
     }
     
     return {
