@@ -1,11 +1,13 @@
 var irc = require('irc'),
     moment = require('moment'),
+    timezone = require('moment-timezone'),
     _ = require('lodash'),
     api = require('./API');
 
 function IrcService() {
     
     var bot, lastMessageAt = moment(), nicks = [],
+        local_time = timezone.tz('America/Chicago'),
         config = {
             userName: 'ExMoBot',
             nick: 'ExMoBot',
@@ -24,6 +26,7 @@ function IrcService() {
     }
     
     function connect() {
+        console.log('Time to get this party started!\nConnecting to ' + defaultChannel() + '...');
         bot = new irc.Client('irc.twitch.tv', config.nick, config);
         if (config.debug) {
             bot.addListener('raw', onRaw);
@@ -67,22 +70,18 @@ function IrcService() {
             if (command.length > 2) {
                 switch(command) {
                     case 'highfive':
-                        if (spaceIndex > 0) {
-                            var _message = text.substring(spaceIndex+1,text.length);
-                            spaceIndex = _message.indexOf(' ');
-                            if (spaceIndex > 0) {
-                                _message = _message.substr(0, spaceIndex).trim()
-                            }
-                            
-                            for (var i=0; i < nicks.length; i++) {
-                                if (nicks[i].toLowerCase() === _message.toLowerCase()) {
-                                    from = _message;
-                                    break;
-                                }
-                            }
-                        }
+                        from = targetUser(from, text);
                         bot.say(defaultChannel(), 'Slip me some skin ' + from + '!');
                         bot.say(defaultChannel(), '/me high fives ' + from + '!');
+                        break;
+                    case 'time':
+                        bot.say(defaultChannel(), 'ExtremeModeration\'s time is currently ' + local_time.format('h:mm A'));
+                        break;
+                    case 'points':
+                        from = targetUser(from, text);
+                        api.viewers.getViewerPoints(from, function(viewer){
+                            bot.say(defaultChannel(), from + ', you currently have ' + viewer.points + ' points.  Go you!');
+                        });
                         break;
                 }
             }
@@ -109,6 +108,27 @@ function IrcService() {
     
     function onRaw(message) {
         console.log(message);
+    }
+    
+    function targetUser(from, text) {
+        var spaceIndex = text.indexOf(' '),
+            nick = from;
+        if (spaceIndex > 0) {
+            var _message = text.substring(spaceIndex+1,text.length);
+            spaceIndex = _message.indexOf(' ');
+            if (spaceIndex > 0) {
+                _message = _message.substr(0, spaceIndex).trim()
+            }
+            
+            for (var i=0; i < nicks.length; i++) {
+                if (nicks[i].toLowerCase() === _message.toLowerCase()) {
+                    nick = _message;
+                    break;
+                }
+            }
+        }
+        
+        return nick;
     }
     
     return {

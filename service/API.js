@@ -13,14 +13,26 @@ function API() {
                 .set('client-secret', secret)
                 .send({viewers: nicks})
                 .end(function(e, result){
-                    if (e) return console.log(e);
+                    if (e) return console.error(e);
                     if (callback) {
                         callback(result);
                     }
                 });
         }
+        
+        function getViewerPoints(nick, callback) {
+            superagent.get(root + '/v1/viewers/' + nick)
+                .set('client-token', token)
+                .set('client-secret', secret)
+                .end(function(e, result){
+                    if (e) return console.error(e);
+                    callback(result.body);
+                });
+        }
+        
         return {
-            sendNicks: sendNicks
+            sendNicks: sendNicks,
+            getViewerPoints: getViewerPoints
         };
     }
     
